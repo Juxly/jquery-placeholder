@@ -20,7 +20,7 @@
 	var hooks;
 	var placeholder;
 	var events = {
-		'clear': 'keydown.placeholder',
+		'clear': 'input.placeholder propertychange.placeholder selectionchange.placeholder',
 		'set'  : 'keyup.placeholder blur.placeholder',
 		'focus': 'focus.placeholder click.placeholder'
 	};
