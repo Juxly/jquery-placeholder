@@ -12,9 +12,11 @@
 }(function($) {
 
     // Opera Mini v7 doesn't support placeholder although its DOM seems to indicate so
-    var isOperaMini = Object.prototype.toString.call(window.operamini) === '[object OperaMini]';
+  var isOperaMini = Object.prototype.toString.call(window.operamini) === '[object OperaMini]';
 	var isInputSupported = 'placeholder' in document.createElement('input') && !isOperaMini;
-	var isTextareaSupported = 'placeholder' in document.createElement('textarea') && !isOperaMini;
+  var isTextareaSupported = 'placeholder' in document.createElement('textarea') && !isOperaMini;
+  var ua = window.navigator.userAgent;
+  var msie = ua.indexOf("MSIE ");
 	var valHooks = $.valHooks;
 	var propHooks = $.propHooks;
 	var hooks;
@@ -26,7 +28,7 @@
 	};
     var settings = {};
 
-	if (isInputSupported && isTextareaSupported) {
+	if (isInputSupported && isTextareaSupported && !msie) {
 
 		placeholder = $.fn.placeholder = function() {
 			return this;
@@ -36,13 +38,12 @@
         placeholder.textarea = true;
 
 	} else {
-
 		placeholder = $.fn.placeholder = function(options) {
 
 			var defaults = {customClass: 'placeholder'};
 			settings = $.extend({}, defaults, options);
 
-            return this.filter((isInputSupported ? 'textarea' : ':input') + '[placeholder]')
+            return this.filter((':input') + '[placeholder]')
 				.not('.'+settings.customClass)
 				.bind(events.clear, clearPlaceholder)
 				.bind(events.set, setPlaceholder)
@@ -51,8 +52,8 @@
                 .trigger('blur.placeholder');
 		};
 
-		placeholder.input = isInputSupported;
-		placeholder.textarea = isTextareaSupported;
+		placeholder.input = isInputSupported && !msie;
+		placeholder.textarea = isTextareaSupported && !msie;
 
 		hooks = {
 			'get': function(element) {
@@ -115,7 +116,7 @@
 			}
 		};
 
-		if (!isInputSupported) {
+		if (!isInputSupported || msie) {
 			valHooks.input = hooks;
 			propHooks.value = hooks;
 		}
@@ -192,7 +193,7 @@
 	}
 
     function setPlaceholder(event) {
-		var $replacement;
+    var $replacement;
 		var input = this;
 		var $input = $(input);
         var id = input.id;
@@ -213,7 +214,7 @@
         }
 
 		if (input.value === '' || (input.value == $input.attr('placeholder') && $input.hasClass(settings.customClass))) {
-			if (input.type === 'password') {
+			if (input.type !== 'password') {
 				if (!$input.data('placeholder-textinput')) {
 
 					try {
@@ -225,13 +226,13 @@
 					$replacement
 						.removeAttr('name')
 						.data({
-                            'placeholder-enabled': true,
+              'placeholder-enabled': true,
 							'placeholder-password': $input,
 							'placeholder-id': id
 						})
 						.bind(events.clear, clearPlaceholder)
-						.bind(events.focus, positionCaret);
-
+            .bind(events.focus, positionCaret);
+          
 					$input
 						.data({
 							'placeholder-textinput': $replacement,
@@ -267,7 +268,7 @@
 
 	function positionCaret() {
 		var input = this,
-			$input = $(input);
+      $input = $(input);
 
 		// if input is empty, position caret at the beginning
 		// otherwise let the browser select all input text
